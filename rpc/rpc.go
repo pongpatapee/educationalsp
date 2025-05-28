@@ -35,13 +35,33 @@ func DecodeMessage(msg []byte) (string, []byte, error) {
 		return "", nil, err
 	}
 
-	// TODO:
-	_ = content
-
 	var baseMessage BaseMessage
 	if err := json.Unmarshal(content[:contentLength], &baseMessage); err != nil {
 		return "", nil, err
 	}
 
 	return baseMessage.Method, content[:contentLength], nil
+}
+
+// type SplitFunc func(data []byte, atEOF bool) (advance int, token []byte, err error)
+func Split(data []byte, _ bool) (advance int, token []byte, err error) {
+	header, content, found := bytes.Cut(data, []byte{'\r', '\n', '\r', '\n'})
+	if !found {
+		return 0, nil, nil
+	}
+
+	// Content-Length: <number>
+	contentLengthBytes := header[len("Content-Length: "):]
+	contentLength, err := strconv.Atoi(string(contentLengthBytes))
+	if err != nil {
+		return 0, nil, err
+	}
+
+	if len(content) < contentLength {
+		return 0, nil, nil
+	}
+
+	totalLength := len(header) + 4 + contentLength
+
+	return totalLength, data[:totalLength], nil
 }
