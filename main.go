@@ -49,6 +49,17 @@ func handleMessage(logger *log.Logger, method string, content []byte) {
 		writer.Write([]byte(reply))
 
 		logger.Print("sent a reply")
+
+	case "textDocument/didOpen":
+		var request lsp.DidOpenTextDocumentNotification
+		if err := json.Unmarshal(content, &request); err != nil {
+			logger.Printf("Couldn't parse this: %s", err)
+		}
+
+		logger.Printf("Opened: %s %s",
+			request.Params.TextDocument.Uri,
+			request.Params.TextDocument.Text)
+
 	}
 }
 
