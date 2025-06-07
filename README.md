@@ -1,3 +1,3 @@
 # Educationalsp
 
-Creating an LSP from scratch for leanring purposes. By TJDevries
+Creating an LSP from scratch for learning purposes. By TJDevries
