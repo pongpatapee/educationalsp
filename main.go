@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"educationalsp/analysis"
 	"educationalsp/lsp"
 	"educationalsp/rpc"
 	"encoding/json"
@@ -15,6 +16,8 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(rpc.Split)
 
+	state := analysis.NewState()
+
 	for scanner.Scan() {
 		msg := scanner.Bytes()
 		method, content, err := rpc.DecodeMessage(msg)
@@ -22,12 +25,12 @@ func main() {
 			logger.Printf("Got an error: %s\n", err)
 			continue
 		}
-		handleMessage(logger, method, content)
+		handleMessage(logger, state, method, content)
 	}
 }
 
-func handleMessage(logger *log.Logger, method string, content []byte) {
-	logger.Printf("Received raw content: %s", string(content))
+func handleMessage(logger *log.Logger, state analysis.State, method string, content []byte) {
+	// logger.Printf("Received raw content: %s", string(content))
 	logger.Printf("Received msg with method: %s", method)
 
 	switch method {
@@ -53,12 +56,27 @@ func handleMessage(logger *log.Logger, method string, content []byte) {
 	case "textDocument/didOpen":
 		var request lsp.DidOpenTextDocumentNotification
 		if err := json.Unmarshal(content, &request); err != nil {
-			logger.Printf("Couldn't parse this: %s", err)
+			logger.Printf("textDocument/didOpen: %s", err)
 		}
 
 		logger.Printf("Opened: %s %s",
-			request.Params.TextDocument.Uri,
+			request.Params.TextDocument.URI,
 			request.Params.TextDocument.Text)
+
+		state.OpenDocument(request.Params.TextDocument.URI, request.Params.TextDocument.Text)
+
+	case "textDocument/didChange":
+		var request lsp.TextDocumentDidChangeNotification
+		if err := json.Unmarshal(content, &request); err != nil {
+			logger.Printf("textDocument/didChange: %s", err)
+			return
+		}
+
+		logger.Printf("Opened: %s", request.Params.TextDocument.URI)
+
+		for _, change := range request.Params.ContentChanges {
+			state.UpdateDocument(request.Params.TextDocument.URI, change.Text)
+		}
 
 	}
 }

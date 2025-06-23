@@ -4,7 +4,7 @@ type TextDocumentItem struct {
 	/**
 	 * The text document's URI.
 	 */
-	Uri string `json:"uri"`
+	URI string `json:"uri"`
 
 	/**
 	 * The text document's language identifier.
@@ -21,4 +21,13 @@ type TextDocumentItem struct {
 	 * The content of the opened text document.
 	 */
 	Text string `json:"text"`
+}
+
+type TextDocumentIdentifer struct {
+	URI string `json:"uri"`
+}
+
+type VersionTextDocumentIdentifer struct {
+	TextDocumentIdentifer
+	version int `json:"version"`
 }
